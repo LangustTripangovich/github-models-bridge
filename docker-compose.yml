@@ -1,0 +1,22 @@
+services:
+  github-models-bridge:
+    build: .
+    image: github-models-bridge:latest
+    container_name: github-models-bridge
+    restart: unless-stopped
+    ports:
+      - "8000:8000"          # доступ снаружи (опционально, для отладки)
+    environment:
+      # Токен задаётся в Portainer → Stack → Environment variables
+      # Переменная: GITHUB_TOKEN  Значение: ghp_твой_токен
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    networks:
+      - n8n-network
+
+# Подключаемся к уже существующей сети n8n.
+# Реальное имя сети смотри в Portainer → Networks.
+# Замени n8n_default на актуальное имя, если оно отличается.
+networks:
+  n8n-network:
+    external: true
+    name: n8n_default
