@@ -373,6 +373,84 @@ return [{"reply": reply}]
 
 ---
 
+## Часть 3: Деплой через Portainer из GitHub
+
+Репозиторий: **https://github.com/LangustTripangovich/github-models-bridge**
+
+### Шаг 1 — Узнай имя Docker-сети n8n
+
+В Portainer → **Networks** → найди сеть, к которой подключён контейнер n8n.  
+Обычно это `n8n_default` или `n8n-net`.
+
+Открой [docker-compose.yml](docker-compose.yml) и замени `n8n_default` на реальное имя:
+```yaml
+networks:
+  n8n-network:
+    external: true
+    name: n8n_default   # ← сюда
+```
+Закоммить изменение в репо.
+
+---
+
+### Шаг 2 — Создай Stack в Portainer
+
+1. Portainer → **Stacks → Add stack**
+2. Выбери **Git repository**
+3. Заполни:
+   - **Repository URL**: `https://github.com/LangustTripangovich/github-models-bridge`
+   - **Branch**: `master`
+   - **Compose path**: `docker-compose.yml`
+4. В разделе **Environment variables** добавь:
+   ```
+   GITHUB_TOKEN = ghp_твой_токен
+   ```
+5. Нажми **Deploy the stack**
+
+Portainer сам склонирует репо, соберёт образ и запустит контейнер.
+
+---
+
+### Шаг 3 — Проверь что сервис работает
+
+В Portainer → **Containers** → `github-models-bridge` → **Logs** должны быть:
+```
+Uvicorn running on http://0.0.0.0:8000
+Application startup complete.
+```
+
+Или curl прямо с сервера:
+```bash
+curl http://github-models-bridge:8000/health
+# {"status":"ok"}
+```
+
+---
+
+### Шаг 4 — Настрой n8n
+
+В n8n добавь ноду **HTTP Request**:
+
+| Поле | Значение |
+|------|----------|
+| Method | `POST` |
+| URL | `http://github-models-bridge:8000/chat` |
+| Body Content Type | `JSON` |
+| Body | `{ "message": "{{ $json.твоё_поле }}" }` |
+
+Ответ читай из `{{ $json.reply }}`.
+
+> Важно: внутри Docker-сети контейнеры видят друг друга по `container_name`, а не по `localhost`.
+
+---
+
+### Обновление после изменений в коде
+
+1. Закоммить и запушить изменения в GitHub
+2. В Portainer → **Stacks** → твой stack → **Pull and redeploy**
+
+---
+
 ## Лимиты GitHub Models (бесплатный тариф)
 
 | Модели | Запросов/мин | Запросов/день |
