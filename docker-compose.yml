@@ -4,8 +4,9 @@ services:
     image: github-models-bridge:latest
     container_name: github-models-bridge
     restart: unless-stopped
+    
     ports:
-      - "8000:8000"          # доступ снаружи (опционально, для отладки)
+      - "8188:8000"
     environment:
       # Токен задаётся в Portainer → Stack → Environment variables
       # Переменная: GITHUB_TOKEN  Значение: ghp_твой_токен
